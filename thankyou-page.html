@@ -1,0 +1,8 @@
+<script>
+  if (window.sessionStorage.getItem('scenario') === 'a') {
+    var style = document.createElement('style');
+    style.innerHTML = '.rd-paywall { display: none !important; }';
+    document.head.appendChild(style);
+    document.body.classList.remove('is-blocked');
+  }
+</script>
