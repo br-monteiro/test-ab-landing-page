@@ -130,8 +130,9 @@
   }
 
   function listeningSteps() {
-    executer(function (whenResult) {
-      whenResult.addEventListener('click', function () {
+    executer(function () {
+      var btnSubmit = document.querySelector('div.bricks-form__submit button');
+      btnSubmit.addEventListener('click', function () {
         var form = document.querySelector('#conversion-form');
 
         if (form.checkValidity()) {
@@ -169,7 +170,7 @@
       });
     },
       function () {
-        return document.querySelector('div.bricks-form__submit button');
+        return document.querySelector('#form-progress-bar') && document.querySelector('div.bricks-form__submit button');
       },
       commonStopFunction, 500);
   }
