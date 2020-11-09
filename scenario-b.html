@@ -1,0 +1,181 @@
+<script>
+  console.log('#scenario-B');
+
+  var URL_MACRO_SHEETS = '';
+  /**
+   * Execute a Callback function with a condition with certain frequency
+   * @param { Function } callback The callback to be called
+   * @param { Function | Number } when The function or number in milliseconds that indicates when the callback is called
+   * @param { Function } stop The function that indicates when the interval must be stopped. This function receives two arguments: the number of current execution and the result of When function
+   * @param { Number } frequency The frequency of execution of retries
+   * @return { void }
+   */
+  function executer(callback, when, stop, frequency) {
+    if (typeof callback !== 'function') {
+      throw new Error('The "callback" is not a function');
+    }
+    var currentExecution = 1;
+    frequency = frequency || 0;
+    frequency = (typeof when === 'number' && parseInt(when, 10)) || frequency;
+    stop = (typeof stop === 'function' && stop) || function () { return true; };
+    when = (typeof when === 'function' && when) || function () { return true; };
+    var interval = setInterval(function handlerInterval() {
+      var resultOfWhenFunction = when();
+      if (resultOfWhenFunction) {
+        callback(resultOfWhenFunction);
+      }
+      if (stop(currentExecution, resultOfWhenFunction)) {
+        clearInterval(interval);
+      }
+      currentExecution += 1;
+    }, frequency);
+  }
+
+  function isMobile() {
+    try {
+      return Number([
+        /Android/i,
+        /webOS/i,
+        /iPhone/i,
+        /iPad/i,
+        /iPod/i,
+        /BlackBerry/i,
+        /Windows Phone/i
+      ].some((item) => {
+        return window.navigator.userAgent.match(item);
+      }));
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  function saveData(data) {
+    if (!data) {
+      return;
+    }
+
+    $.ajax({
+      method: 'post',
+      url: URL_MACRO_SHEETS,
+      data: JSON.stringify(data)
+    })
+      .fail(function () {
+        console.log('Error: could not send the data');
+      })
+  }
+
+  function getTrackingId() {
+    var matches = /(?:rd-tracking-id=)(.*?)(?:$|; )/.exec(decodeURIComponent(document.cookie));
+
+    if (matches) {
+      return matches[1];
+    }
+
+    var d = new Date();
+    d.setTime(d.getTime() + (2 * 86400000)); // 24*60*60*1000 = 86400000
+    document.cookie = 'rd-tracking-id=trk-' + Date.now() + ';expires=' + d.toUTCString() + ';path=/';
+
+    return getTrackingId();
+  }
+
+  function getEmailFromForm(form) {
+    try {
+      return form.querySelector('#email').value || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function commonStopFunction(i, w) {
+    return i === 20 || w;
+  }
+
+  function getPPFields(form) {
+    if (!form) {
+      return [];
+    }
+
+    return Array
+      .from(form.querySelectorAll('.js-pp-field'))
+      .map(function (field) {
+        return field.getAttribute('name');
+      })
+      .sort();
+  }
+
+  // steps
+
+  function viewLP() {
+    executer(function () {
+      var data = {
+        'Visitou LP': 1,
+        'Mobile': isMobile()
+      };
+
+      (new UniversalUtmTracker())
+        .then(function (value) {
+          data.id = getTrackingId();
+          data.Medium = value.utm.medium;
+          saveData(data);
+        })
+        .catch(function (error) {
+          console.log('Error: could not send data');
+          console.log('###', error);
+        });
+    },
+      function () {
+        return window.UniversalUtmTracker;
+      },
+      commonStopFunction, 500);
+  }
+
+  function listeningSteps() {
+    executer(function (whenResult) {
+      whenResult.addEventListener('click', function () {
+        var form = document.querySelector('#conversion-form');
+
+        if (form.checkValidity()) {
+          var fields = getPPFields(form);
+
+          if (fields.length > 1) {
+            saveData({
+              Converteu: 1,
+              'Qtde Campos Passo 2': fields.length,
+              Campos: fields.join(', '),
+              id: getTrackingId()
+            })
+          }
+
+          if (fields.length === 1) {
+            saveData({
+              'Passo 2': 1,
+              'E-mail': getEmailFromForm(form),
+              id: getTrackingId()
+            });
+
+            executer(function () {
+              var fields = getPPFields(form);
+              saveData({
+                'Qtde Campos Passo 2': fields.length,
+                Campos: fields.join(','),
+                id: getTrackingId()
+              })
+            },
+              function () {
+                return getPPFields(form).length > 1
+              }, commonStopFunction, 1500);
+          }
+        }
+      });
+    },
+      function () {
+        return document.querySelector('div.bricks-form__submit button');
+      },
+      commonStopFunction, 500);
+  }
+
+  // run
+
+  viewLP();
+  executer(listeningSteps, 2000);
+</script>
