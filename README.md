@@ -27,7 +27,7 @@ O experimento é composto por dois cenários, sendo eles A e B, com as seguintes
 
 ### Configurando cenários
  - Entre na tela de edição da LP e habilite o teste A/B clicando no botão **Criar Teste A/B**
- - Neste repositório é possível encontrar os scripts que devem ser inseridos através da **Edição avançada**
+ - Neste repositório é possível encontrar os scripts que devem ser inseridos através da **Edição avançada** para cada cenário
 
 script do [cenário A](scenario-a.html)<br>
 script do [cenário B](scenario-b.html)<br>
