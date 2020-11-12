@@ -41,7 +41,7 @@
         /iPod/i,
         /BlackBerry/i,
         /Windows Phone/i
-      ].some((item) => {
+      ].some(function (item) {
         return window.navigator.userAgent.match(item);
       }));
     } catch (_) {
