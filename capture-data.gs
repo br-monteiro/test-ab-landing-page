@@ -76,7 +76,7 @@ function doPost(e) {
     const values = sheet.getDataRange().getValues();
     const length = values.length;
 
-    for (var i = 0; i < length; i++) {
+    for (var i = length - 1; i >= 0; i--) {
       if (values[i][0] === id) {
         return {
           num: i + 1,
